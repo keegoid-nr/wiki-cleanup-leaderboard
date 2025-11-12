@@ -2,13 +2,8 @@ modules:
   macro:
     - key: wiki-cleanup-leaderboard
       resource: main
-      resolver:
-        function: resolver
       title: wiki-cleanup-leaderboard
       description: An application to track and display a leaderboard for a Confluence wiki cleanup competition. It shows pages updated today, the editors, and calculates scores based on competition rules.
-  function:
-    - key: resolver
-      handler: index.handler
 resources:
   - key: main
     path: static/wiki-cleanup-leaderboard/build
