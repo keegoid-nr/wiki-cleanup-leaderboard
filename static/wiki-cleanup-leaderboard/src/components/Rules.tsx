@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 const RuleItem: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -35,21 +34,6 @@ export const Rules: React.FC = () => {
                                 <li>Making content updates for clarity or accuracy.</li>
                             </ul>
                             <p className="mt-2 text-gray-400">Archiving pages and creating new articles are not included.</p>
-                        </RuleItem>
-
-                        <RuleItem title="3. Bonus: Focused Flow (2x Points)">
-                            <p>Earn double points for 60 minutes. Each article edit is worth 2 points.</p>
-                            <ul className="list-disc pl-5 mt-2 space-y-1">
-                                <li>Activate by using #WIKIFLOW in the designated Slack channel.</li>
-                                <li>Limit of one Focused Flow per engineer, per day.</li>
-                            </ul>
-                        </RuleItem>
-
-                        <RuleItem title="4. Bonus: Critical Content Blitz (3x Points)">
-                            <p>Earn triple points on December 2nd. Each article edit is worth 3 points.</p>
-                            <ul className="list-disc pl-5 mt-2 space-y-1">
-                                <li>Edit 5 critical articles from the pre-approved list to qualify for the blitz bonus.</li>
-                            </ul>
                         </RuleItem>
                     </ul>
                 </div>

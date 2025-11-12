@@ -1,4 +1,3 @@
-
 export interface User {
   name: string;
   score: number;
@@ -10,16 +9,11 @@ export interface UserInfo {
     avatar: string;
 }
 
-export type EditType = 'Typo Fix' | 'Link Update' | 'Formatting' | 'Minor Content';
-
-export type BonusType = 'FOCUSED_FLOW' | 'CRITICAL_BLITZ' | null;
-
 export interface PageUpdate {
   id: string;
   pageTitle: string;
+  pageUrl: string;
   user: UserInfo;
-  editType: EditType;
-  bonusType: BonusType;
   timestamp: string;
   editCharacterCount: number;
 }

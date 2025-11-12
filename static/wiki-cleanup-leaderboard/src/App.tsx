@@ -1,11 +1,12 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { UpdatedPagesList } from './components/UpdatedPagesList';
-import { getTodaysUpdates } from './services/confluenceService';
-import type { User, PageUpdate, BonusType } from './types';
+import { getCompetitionUpdates } from './services/confluenceService';
+import type { User, PageUpdate } from './types';
 
 const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,14 +22,8 @@ const App: React.FC = () => {
         userScores[update.user.name] = { score: 0, avatar: update.user.avatar };
       }
 
-      let points = 1;
-      if (update.bonusType === 'FOCUSED_FLOW') {
-        points = 2;
-      } else if (update.bonusType === 'CRITICAL_BLITZ') {
-        points = 3;
-      }
-
-      userScores[update.user.name].score += points;
+      // Simplified scoring: 1 point per qualifying edit.
+      userScores[update.user.name].score += 1;
     });
 
     return Object.entries(userScores)
@@ -40,7 +35,7 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const updates = await getTodaysUpdates();
+      const updates = await getCompetitionUpdates();
       const qualifyingUpdates = updates.filter(update => update.editCharacterCount >= 10);
       const scoredUsers = calculateScores(qualifyingUpdates);
       setPageUpdates(updates);

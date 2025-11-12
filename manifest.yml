@@ -16,3 +16,5 @@ app:
 permissions:
   scopes:
     - 'read:confluence-content.all'
+    - 'read:confluence-user'
+    - 'search:confluence'
