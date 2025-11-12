@@ -1,0 +1,23 @@
+modules:
+  macro:
+    - key: wiki-cleanup-leaderboard
+      resource: main
+      resolver:
+        function: resolver
+      title: wiki-cleanup-leaderboard
+      description: An application to track and display a leaderboard for a Confluence wiki cleanup competition. It shows pages updated today, the editors, and calculates scores based on competition rules.
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/wiki-cleanup-leaderboard/build
+app:
+  runtime:
+    name: nodejs22.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/427f0094-0946-47d5-b6d2-f6d1c831866b
+permissions:
+  scopes:
+    - 'read:confluence-content.all'
