@@ -21,19 +21,23 @@ export const Rules: React.FC = () => {
             {isOpen && (
                 <div className="prose prose-invert prose-sm max-w-none">
                     <ul className="list-none p-0">
-                        <RuleItem title="1. Earn Points">
-                            <p>Edit any Support Engineering Wiki Article on Confluence to earn points. Points reset weekly.</p>
+                        <RuleItem title="1. Scoring">
+                            <p>Your score is the total number of characters changed (added or removed) across all your edits on any Support Engineering Wiki Article. Each character is worth 1 point by default.</p>
                         </RuleItem>
-
-                        <RuleItem title="2. Qualifying Edits (1 Point)">
-                            <p>Each validated edit of <strong className="text-white">10 characters or more</strong> earns one point. Qualifying edits include:</p>
+                        <RuleItem title="2. Bonus: Focused Flow (2x Points)">
+                            <p>Activate a 60-minute double points session by using the <strong>#WIKIFLOW</strong> command in the <strong>#gts-wikicleanup</strong> Slack channel. This can be used once per day, per editor.</p>
+                        </RuleItem>
+                        <RuleItem title="3. Bonus: Critical Content Blitz (3x Points)">
+                            <p>On <strong>December 2nd only</strong>, all edits made to a curated list of critical pages will earn triple points. Edits to these pages will automatically receive the bonus.</p>
+                        </RuleItem>
+                         <RuleItem title="4. General Rules & Limitations">
+                            <p>Points are awarded based on character changes to <strong>existing</strong> pages. Due to API limitations, the following actions are <strong>not scored</strong>:</p>
                             <ul className="list-disc pl-5 mt-2 space-y-1">
-                                <li>Fixing typos or grammatical errors.</li>
-                                <li>Repairing broken links.</li>
-                                <li>Improving formatting for readability.</li>
-                                <li>Making content updates for clarity or accuracy.</li>
+                                <li>Creating new pages.</li>
+                                <li>Archiving or deleting pages.</li>
+                                <li>Formatting-only changes (e.g., bolding text, changing colors).</li>
                             </ul>
-                            <p className="mt-2 text-gray-400">Archiving pages and creating new articles are not included.</p>
+                            <p className="mt-3 text-gray-400">The goal is to improve our wiki. While not all valuable contributions can be scored automatically, all efforts to make our SE space more readable and useful are appreciated!</p>
                         </RuleItem>
                     </ul>
                 </div>

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Leaderboard } from './components/Leaderboard';
@@ -18,12 +16,11 @@ const App: React.FC = () => {
     const userScores: { [key: string]: { score: number; avatar: string } } = {};
 
     updates.forEach(update => {
-      if (!userScores[update.user.name]) {
-        userScores[update.user.name] = { score: 0, avatar: update.user.avatar };
+      const { user, editCharacterCount, multiplier } = update;
+      if (!userScores[user.name]) {
+        userScores[user.name] = { score: 0, avatar: user.avatar };
       }
-
-      // Simplified scoring: 1 point per qualifying edit.
-      userScores[update.user.name].score += 1;
+      userScores[user.name].score += editCharacterCount * multiplier;
     });
 
     return Object.entries(userScores)
@@ -36,8 +33,7 @@ const App: React.FC = () => {
     setError(null);
     try {
       const updates = await getCompetitionUpdates();
-      const qualifyingUpdates = updates.filter(update => update.editCharacterCount >= 10);
-      const scoredUsers = calculateScores(qualifyingUpdates);
+      const scoredUsers = calculateScores(updates);
       setPageUpdates(updates);
       setUsers(scoredUsers);
     } catch (err) {
@@ -57,9 +53,16 @@ const App: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <Header onRefresh={fetchLeaderboardData} isLoading={isLoading} />
 
+        {error && (
+          <div className="mt-8 bg-red-800/50 border border-red-600 text-red-200 px-4 py-3 rounded-lg" role="alert">
+            <p className="font-bold">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
         <main className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <Leaderboard users={users} isLoading={isLoading} />
+            <Leaderboard users={users} updates={pageUpdates} isLoading={isLoading} />
             <UpdatedPagesList updates={pageUpdates} isLoading={isLoading} />
           </div>
 

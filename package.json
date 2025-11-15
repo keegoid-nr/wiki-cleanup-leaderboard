@@ -5,6 +5,8 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__template": "^7.4.4",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0"
   },

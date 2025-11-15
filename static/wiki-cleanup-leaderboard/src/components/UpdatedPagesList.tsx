@@ -29,20 +29,22 @@ export const UpdatedPagesList: React.FC<UpdatedPagesListProps> = ({ updates, isL
           <ul className="divide-y divide-gray-700">
             {updates.length > 0 ? (
                 updates.map(update => (
-                <li key={update.id} className={`py-4 flex items-start space-x-4 transition-opacity ${update.editCharacterCount < 10 ? 'opacity-60' : ''}`}>
+                <li key={update.id} className="py-4 flex items-start space-x-4">
                     <img src={update.user.avatar} alt={update.user.name} className="h-10 w-10 rounded-full mt-1" />
                     <div className="flex-grow">
                         <a href={update.pageUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-200 hover:text-indigo-400 hover:underline">
                             {update.pageTitle}
                         </a>
-                        <p className="text-sm text-gray-400">Updated by {update.user.name} &bull; {update.editCharacterCount} char change</p>
-                        <div className="mt-2 flex flex-wrap gap-2 items-center">
-                             {update.editCharacterCount < 10 && (
-                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-yellow-900 text-yellow-300">
-                                    Below Minimum
+                        <p className="text-sm text-gray-400 flex items-center">
+                            Updated by {update.user.name} &bull; {update.editCharacterCount} char change
+                            {update.multiplier > 1 && (
+                                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
+                                    update.bonusType === 'Critical Content Blitz' ? 'bg-red-500/30 text-red-300' : 'bg-green-500/30 text-green-300'
+                                }`}>
+                                    x{update.multiplier}
                                 </span>
                             )}
-                        </div>
+                        </p>
                     </div>
                 </li>
                 ))
