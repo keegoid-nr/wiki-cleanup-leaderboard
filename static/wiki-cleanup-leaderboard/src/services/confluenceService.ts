@@ -219,7 +219,7 @@ const getLiveCompetitionUpdates = async (): Promise<PageUpdate[]> => {
                 
                 const user: UserInfo = {
                     name: currentData.version?.by?.displayName ?? 'Unknown User',
-                    avatar: `${siteUrl}${currentData.version?.by?.profilePicture?.path}` ?? ''
+                    avatar: `${siteUrl}${currentData.version?.by?.profilePicture?.path}`
                 };
 
                 return {

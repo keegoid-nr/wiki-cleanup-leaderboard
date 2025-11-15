@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { User, PageUpdate } from '../types';
 import { TrophyIcon } from './icons/TrophyIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { ChevronDownIcon } from '../components/icons/ChevronDownIcon';
 
 interface LeaderboardProps {
   users: User[];
