@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 const RuleItem: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <li className="mb-4">
-    <h4 className="font-semibold text-indigo-400">{title}</h4>
-    <div className="pl-4 border-l-2 border-gray-700 mt-1 text-gray-300 text-sm">
+    <h4 className="font-semibold text-nr-green-accent">{title}</h4>
+    <div className="pl-4 border-l-2 border-nr-dark-light mt-1 text-gray-300 text-sm">
       {children}
     </div>
   </li>
@@ -13,7 +13,7 @@ export const Rules: React.FC = () => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <aside className="bg-gray-800 rounded-lg shadow-lg p-6 sticky top-8">
+        <aside className="bg-nr-dark-card rounded-lg shadow-lg p-6 sticky top-8">
              <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center text-xl font-semibold text-white mb-4">
                 <span>Competition Rules</span>
                 <svg className={`w-6 h-6 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -38,6 +38,9 @@ export const Rules: React.FC = () => {
                                 <li>Formatting-only changes (e.g., bolding text, changing colors).</li>
                             </ul>
                             <p className="mt-3 text-gray-400">The goal is to improve our wiki. While not all valuable contributions can be scored automatically, all efforts to make our SE space more readable and useful are appreciated!</p>
+                        </RuleItem>
+                        <RuleItem title="5. Prizes">
+                            <p>A <strong>$100 prize</strong> is awarded to the top scorer of each weekly period. A <strong>$250 grand prize</strong> is awarded to the overall top scorer at the end of the competition.</p>
                         </RuleItem>
                     </ul>
                 </div>
