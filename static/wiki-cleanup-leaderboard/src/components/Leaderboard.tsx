@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import type { User, PageUpdate } from '../types';
+import type { User, PageUpdate, Contest } from '../types';
 import { TrophyIcon } from './icons/TrophyIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { QuestionMarkIcon } from './icons/QuestionMarkIcon';
 
 interface LeaderboardProps {
   users: User[];
   updates: PageUpdate[];
   isLoading: boolean;
+  selectedContest: Contest | null;
+  week1Users: User[];
+  week2Users: User[];
 }
 
 const LeaderboardSkeleton: React.FC = () => (
@@ -21,13 +25,72 @@ const LeaderboardSkeleton: React.FC = () => (
   </div>
 );
 
+const getTrophy = (index: number): React.ReactNode => {
+    switch(index) {
+        case 0:
+            return <TrophyIcon className="h-6 w-6 text-yellow-400" />;
+        case 1:
+            return <TrophyIcon className="h-6 w-6 text-slate-400" />;
+        case 2:
+            return <TrophyIcon className="h-6 w-6 text-amber-700" />;
+        default:
+            return <span className="font-bold text-lg text-gray-400">{index + 1}</span>;
+    }
+}
 
-export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoading }) => {
+const EligibleUserList: React.FC<{ title: string; users: User[] }> = ({ title, users }) => (
+    <div>
+        <h3 className="text-lg font-semibold text-nr-green-accent mb-2">{title}</h3>
+        <ul className="space-y-2">
+            {users.length > 0 ? users.slice(0, 10).map((user, index) => (
+                <li key={user.username} className="flex items-center bg-nr-dark-light/50 p-2 rounded-md">
+                    <span className="text-gray-400 w-8 text-center">{index + 1}.</span>
+                    <img src={user.avatar} alt={user.name} className="h-8 w-8 rounded-full mr-3" />
+                    <span className="text-nr-font truncate">{user.name}</span>
+                </li>
+            )) : <p className="text-gray-500">No participants yet for this week.</p>}
+        </ul>
+    </div>
+);
+
+
+export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoading, selectedContest, week1Users, week2Users }) => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   const handleToggle = (username: string) => {
     setExpandedUser(expandedUser === username ? null : username);
   };
+
+  if (isLoading && !selectedContest) {
+    return (
+        <section className="bg-nr-dark-card rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 text-white">Leaderboard</h2>
+            <LeaderboardSkeleton />
+        </section>
+    );
+  }
+  
+  if (selectedContest?.name === 'Overall') {
+      return (
+        <section className="bg-nr-dark-card rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4 text-white">Overall Winner Drawing</h2>
+            <div className="bg-nr-dark-light/50 rounded-lg p-6 flex flex-col items-center text-center">
+                <div className="bg-nr-dark rounded-full p-4">
+                    <QuestionMarkIcon className="h-16 w-16 text-nr-green-accent" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mt-4">Mystery Winner!</h3>
+                <p className="text-gray-300 mt-2 max-w-md">
+                    The <strong>$250 grand prize</strong> winner will be randomly drawn from the top 10 editors of Week 1 and Week 2.
+                </p>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <EligibleUserList title="Week 1 Qualifiers" users={week1Users} />
+                <EligibleUserList title="Week 2 Qualifiers" users={week2Users} />
+            </div>
+        </section>
+      )
+  }
 
   return (
     <section className="bg-nr-dark-card rounded-lg shadow-lg p-6">
@@ -44,11 +107,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoad
                   aria-controls={`details-${user.username}`}
                 >
                   <div className="flex items-center justify-center w-12 shrink-0">
-                    {index === 0 ? (
-                        <TrophyIcon className="h-6 w-6 text-nr-green-accent" />
-                    ) : (
-                        <span className="font-bold text-lg text-gray-400">{index + 1}</span>
-                    )}
+                    {getTrophy(index)}
                   </div>
                   <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full mr-4 border-2 border-gray-600" />
                   <span className="font-medium flex-grow text-nr-font">{user.name}</span>

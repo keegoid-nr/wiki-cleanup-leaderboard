@@ -1,23 +1,63 @@
+
+
 import type { PageUpdate, UserInfo, BonusSession, BonusType, Contest } from '../types';
 
 // --- CONFIGURATION ---
 
+let isForgeEnvironmentPromise: Promise<boolean> | null = null;
 /**
  * Determines if the app runs with mock data or live Confluence data.
- * This is automatically determined by the hostname.
+ * Checks for the presence of the Forge bridge, which is more reliable than
+ * checking for a global `window.forge` object.
  */
-const IS_MOCK = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+export const detectForgeEnvironment = (): Promise<boolean> => {
+    if (!isForgeEnvironmentPromise) {
+        isForgeEnvironmentPromise = (async () => {
+            try {
+                // The dynamic import will fail in a non-Forge environment.
+                const { view } = await import('@forge/bridge');
+                // getContext will throw if not in a Forge context.
+                await view.getContext();
+                return true;
+            } catch (e) {
+                console.warn('Not in a Forge environment, falling back to mock data.');
+                return false;
+            }
+        })();
+    }
+    return isForgeEnvironmentPromise;
+};
 
+let isProductionPromise: Promise<boolean> | null = null;
 /**
- * URL for the Google Sheet that tracks "Focused Flow" bonus sessions.
- * To get this URL:
- * 1. In your Google Sheet, go to `File > Share > Publish to web`.
- * 2. Select the correct sheet tab.
- * 3. Choose "Comma-separated values (.csv)".
- * 4. Click "Publish" and copy the generated link here.
- * IMPORTANT: The sheet must have three columns in this order: "User", "slack link", "timestamp".
+ * Determines if the app is running in the production Confluence environment.
+ * This is used to hide debug tools.
+ * @returns {Promise<boolean>} - True if in production, false for sandbox or local dev.
  */
-const FOCUSED_FLOW_GOOGLE_SHEET_URL: string = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgZHTLRhCJm38SqzQOpmU7_z4OeT-UNsEVGxF1K3WN6UkmCBbFASEqeXN9Yyf89ShrWHnbckVkBhou/pub?gid=0&single=true&output=csv';
+export const isProductionEnvironment = (): Promise<boolean> => {
+    if (isProductionPromise) {
+        return isProductionPromise;
+    }
+
+    isProductionPromise = (async () => {
+        const isForge = await detectForgeEnvironment();
+        if (!isForge) {
+            return false; // Local development is not production
+        }
+        try {
+            const { view } = await import('@forge/bridge');
+            const context = await view.getContext();
+            const siteUrl = context.siteUrl || '';
+            // Production is defined as being in Forge AND NOT being in the sandbox.
+            return !siteUrl.includes('newrelic-sandbox.atlassian.net');
+        } catch (e) {
+            console.warn('Could not determine production environment, assuming false.', e);
+            return false;
+        }
+    })();
+    return isProductionPromise;
+};
+
 
 /**
  * An array of Confluence page IDs that are eligible for the "Critical Content Blitz" bonus.
@@ -67,9 +107,9 @@ const getDynamicContestConfig = (): ContestConfig => {
     const criticalContentBlitzDateObj = new Date(lastWeekStart.getTime() + (24 * 60 * 60 * 1000)); // Monday of "Week 1"
 
     const contests: Contest[] = [
-        { name: 'Week 1', start: lastWeekStart, end: lastWeekEnd, prize: '$100 Weekly Prize' },
-        { name: 'Week 2', start: thisWeekStart, end: thisWeekEnd, prize: '$100 Weekly Prize' },
-        { name: 'Overall', start: lastWeekStart, end: overallEndDate, prize: '$250 Grand Prize' },
+        { name: 'Week 1', start: lastWeekStart, end: lastWeekEnd, prize: 'Three $100 Prizes for Top Editors!' },
+        { name: 'Week 2', start: thisWeekStart, end: thisWeekEnd, prize: 'Three $100 Prizes for Top Editors!' },
+        { name: 'Overall', start: lastWeekStart, end: overallEndDate, prize: '$250 Grand Prize Drawing' },
     ];
 
     return {
@@ -83,9 +123,9 @@ const getDynamicContestConfig = (): ContestConfig => {
 
 const getStaticContestConfig = (): ContestConfig => {
     const contests: Contest[] = [
-        { name: 'Week 1', start: new Date('2024-11-19T00:00:00.000Z'), end: new Date('2024-11-25T23:59:59.999Z'), prize: '$100 Weekly Prize' },
-        { name: 'Week 2', start: new Date('2024-11-26T00:00:00.000Z'), end: new Date('2024-12-02T23:59:59.999Z'), prize: '$100 Weekly Prize' },
-        { name: 'Overall', start: new Date('2024-11-19T00:00:00.000Z'), end: new Date('2024-12-05T23:59:59.999Z'), prize: '$250 Grand Prize' },
+        { name: 'Week 1', start: new Date('2024-11-19T16:00:00.000Z'), end: new Date('2024-11-26T15:59:59.999Z'), prize: 'Three $100 Prizes for Top Editors!' },
+        { name: 'Week 2', start: new Date('2024-11-26T16:00:00.000Z'), end: new Date('2024-12-05T01:00:00.000Z'), prize: 'Three $100 Prizes for Top Editors!' },
+        { name: 'Overall', start: new Date('2024-11-19T16:00:00.000Z'), end: new Date('2024-12-05T01:00:00.000Z'), prize: '$250 Grand Prize Drawing' },
     ];
 
     const criticalContentBlitzDateObj = new Date('2024-12-02T00:00:00Z');
@@ -102,10 +142,11 @@ const getStaticContestConfig = (): ContestConfig => {
 let configPromise: Promise<ContestConfig> | null = null;
 
 const fetchAndSetConfig = async (): Promise<ContestConfig> => {
-    if (IS_MOCK) {
+    const isForge = await detectForgeEnvironment();
+    if (!isForge) {
         return getDynamicContestConfig();
     }
-
+    
     // Using a dynamic import for the Forge bridge to prevent it from being loaded in a non-Forge environment (like localhost)
     const { view } = await import('@forge/bridge');
     const context = await view.getContext();
@@ -144,6 +185,7 @@ const mockUsers: UserInfo[] = [
 ];
 
 const getMockBonusSessions = async (): Promise<BonusSession[]> => {
+    console.log('[MOCK] Generating mock bonus sessions...');
     const now = new Date();
     const sessions: BonusSession[] = [];
     const sessionCount = Math.floor(Math.random() * 2) + 3;
@@ -155,6 +197,7 @@ const getMockBonusSessions = async (): Promise<BonusSession[]> => {
             sessions.push({ user: user.username, startTime, endTime });
         }
     }
+    console.log(`[MOCK] Generated ${sessions.length} unique bonus sessions.`);
     return sessions;
 };
 
@@ -199,11 +242,12 @@ const generateMockUpdates = (bonusSessions: BonusSession[], config: ContestConfi
     Array.from(pageIds).forEach((pageId, i) => {
         updates.push({ id: `blitz-update-${i}`, pageId: pageId, pageTitle: pages[pageId as keyof typeof pages], pageUrl: '#', user: mockUsers[i % mockUsers.length], timestamp: `${date.toISOString().split('T')[0]}T1${i}:00:00Z`, editCharacterCount: Math.floor(Math.random() * 500) + 100 });
     });
-
+    
     return updates.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
 const getMockCompetitionUpdates = async (config: ContestConfig): Promise<PageUpdate[]> => {
+    console.log('[MOCK] Getting mock competition updates...');
     await new Promise(resolve => setTimeout(resolve, 800));
     const bonusSessions = await getMockBonusSessions();
     const updates = generateMockUpdates(bonusSessions, config);
@@ -213,16 +257,19 @@ const getMockCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
 // --- LIVE IMPLEMENTATION FOR CONFLUENCE ENVIRONMENT ---
 
 const getBonusSessions = async (): Promise<BonusSession[]> => {
-    if (!FOCUSED_FLOW_GOOGLE_SHEET_URL) {
-        console.warn('Focused Flow Google Sheet URL is not configured.');
-        return [];
-    }
     try {
-        const response = await fetch(FOCUSED_FLOW_GOOGLE_SHEET_URL);
-        if (!response.ok) return [];
-        const csv = await response.text();
+        // Dynamic import to avoid breaking local dev server
+        const { invoke } = await import('@forge/bridge');
+        console.log('Invoking backend resolver to fetch bonus sessions CSV...');
+        const csv = await invoke<string>('fetch-csv');
+        
+        if (typeof csv !== 'string' || !csv) {
+          console.warn('CSV data from backend is empty or not a string.');
+          return [];
+        }
+        
         const lines = csv.split('\n').slice(1); // skip header
-
+        
         // Using a map to store only the first session per user per day to adhere to the "once per day" rule.
         const userSessions: { [key: string]: Date } = {};
 
@@ -233,18 +280,18 @@ const getBonusSessions = async (): Promise<BonusSession[]> => {
                 const sessionDate = new Date(timestamp.trim());
 
                 if (isNaN(sessionDate.getTime())) {
-                    console.warn(`Invalid timestamp found in bonus sheet: "${timestamp.trim()}"`);
+                    console.warn(`Invalid timestamp found in bonus sheet: "${timestamp.trim()}" for user "${username}"`);
                     return;
                 }
-
+                
                 const userDayKey = `${username}-${sessionDate.getUTCFullYear()}-${sessionDate.getUTCMonth()}-${sessionDate.getUTCDate()}`;
                 if (!userSessions[userDayKey]) {
                     userSessions[userDayKey] = sessionDate;
                 }
             }
         });
-
-        return Object.entries(userSessions).map(([key, startTime]) => {
+        
+        const sessions = Object.entries(userSessions).map(([key, startTime]) => {
             const username = key.substring(0, key.indexOf('-'));
             return {
                 user: username,
@@ -252,11 +299,26 @@ const getBonusSessions = async (): Promise<BonusSession[]> => {
                 endTime: new Date(startTime.getTime() + 60 * 60 * 1000), // 60 minutes
             };
         });
+        
+        console.log(`Successfully parsed ${sessions.length} unique bonus sessions from backend.`);
+        return sessions;
     } catch (error) {
-        console.error('Failed to fetch or parse bonus sessions:', error);
-        return [];
+        console.error('Failed to invoke resolver or parse bonus sessions:', error);
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to fetch bonus sessions from backend. Details: ${message}`);
     }
 };
+
+const handleConfluenceResponse = async (response: Response, errorMessage: string) => {
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            throw new Error(`Confluence API request failed with status ${response.status} (Unauthorized/Forbidden). Please ensure you have permission to view content in the 'SE' space on this Confluence site.`);
+        }
+        const errorText = await response.text();
+        throw new Error(`${errorMessage}: ${response.status} ${errorText}`);
+    }
+    return response.json();
+}
 
 const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpdate[]> => {
     const { requestConfluence, view } = await import('@forge/bridge');
@@ -266,23 +328,37 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
     const competitionStartDate = contests[0].start.toISOString().split('T')[0];
     const competitionEndDate = contests[contests.length-1].end.toISOString().split('T')[0];
     const cql = `space = "SE" AND lastModified >= "${competitionStartDate}" AND lastModified < "${competitionEndDate}"`;
-    const searchResponse = await requestConfluence(`/rest/api/content/search?cql=${cql}&limit=200`);
-    const searchResult = await searchResponse.json();
-    const pages = searchResult.results;
-
+    
+    console.log(`[LIVE] Fetching pages with CQL: ${cql}`);
+    const searchResponse = await requestConfluence(`/rest/api/content/search?cql=${cql}&limit=1000`);
+    
+    const searchResult = await handleConfluenceResponse(searchResponse, 'Confluence search failed');
+    const pages = searchResult.results || [];
+    console.log(`[LIVE] Found ${pages.length} pages updated during the competition.`);
+    
     const stripHtml = (html: string) => html ? html.replace(/<[^>]*>?/gm, '') : '';
-
+    
     const allPageUpdatesPromises = pages.map(async (page: any) => {
+        console.log(`[LIVE] Processing page ID: ${page.id} ('${page.title}')`);
         const versionResponse = await requestConfluence(`/rest/api/content/${page.id}/version?limit=200`);
+        
+        if (!versionResponse.ok) {
+            console.warn(`Could not fetch versions for page ${page.id}. Status: ${versionResponse.status} - ${await versionResponse.text()}`);
+            if (versionResponse.status === 401 || versionResponse.status === 403) {
+                // Silently fail for individual pages, as the user might not have access to all pages.
+                return [];
+            }
+        }
+
         const versionResult = await versionResponse.json();
-        const versions = versionResult.results;
+        const versions = versionResult.results || [];
 
         const competitionVersions = versions.filter((v: any) => {
             const versionDate = new Date(v.when);
             return versionDate >= contests[0].start && versionDate < contests[contests.length-1].end;
         });
         if (competitionVersions.length === 0) return [];
-
+        
         const contentFetchPromises = competitionVersions.map(async (version: any) => {
             if (version.number === 1) return null;
             try {
@@ -290,18 +366,21 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
                     requestConfluence(`/rest/api/content/${page.id}?version=${version.number}&expand=body.storage,version.by`),
                     requestConfluence(`/rest/api/content/${page.id}?version=${version.number - 1}&expand=body.storage`)
                 ]);
-                if (!currentRes.ok || !prevRes.ok) return null;
+                if (!currentRes.ok || !prevRes.ok) {
+                    console.warn(`Failed to fetch content for page ${page.id}, version ${version.number}. Current status: ${currentRes.status}, Prev status: ${prevRes.status}`);
+                    return null;
+                };
                 const currentData = await currentRes.json();
                 const prevData = await prevRes.json();
                 const charCount = Math.abs(stripHtml(currentData.body?.storage?.value).length - stripHtml(prevData.body?.storage?.value).length);
-
+                
                 const avatarPath = currentData.version?.by?.profilePicture?.path;
                 const user: UserInfo = {
                     name: currentData.version?.by?.displayName ?? 'Unknown User',
                     username: currentData.version?.by?.username ?? '',
                     avatar: avatarPath ? `${siteUrl}${avatarPath}` : ''
                 };
-
+                
                 return { id: `${page.id}-${version.number}`, pageId: page.id, pageTitle: page.title, pageUrl: `${siteUrl}${page._links.webui}`, user, timestamp: version.when, editCharacterCount: charCount };
             } catch (error) {
                 console.error(`Error processing version ${version.number} for page ${page.id}:`, error);
@@ -319,7 +398,7 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
 
 // --- SHARED BONUS LOGIC ---
 
-const isSameUTCDate = (dateA: Date, dateB: Date): boolean =>
+const isSameUTCDate = (dateA: Date, dateB: Date): boolean => 
     dateA.getUTCFullYear() === dateB.getUTCFullYear() &&
     dateA.getUTCMonth() === dateB.getUTCMonth() &&
     dateA.getUTCDate() === dateB.getUTCDate();
@@ -346,12 +425,31 @@ const applyBonuses = ( updates: Omit<PageUpdate, 'multiplier' | 'bonusType'>[], 
     });
 };
 
-// --- EXPORTED ROUTER FUNCTION ---
+// --- EXPORTED ROUTER FUNCTIONS ---
 
 export const getCompetitionUpdates = async (): Promise<PageUpdate[]> => {
-    const config = await getConfig();
-    if (IS_MOCK) {
-        return getMockCompetitionUpdates(config);
+    try {
+        const config = await getConfig();
+        const isForge = await detectForgeEnvironment();
+        if (!isForge) {
+            return getMockCompetitionUpdates(config);
+        }
+        return getLiveCompetitionUpdates(config);
+    } catch (err) {
+        console.error("Error in getCompetitionUpdates:", err);
+        throw err;
     }
-    return getLiveCompetitionUpdates(config);
+};
+
+export const getBonusSessionsData = async (): Promise<BonusSession[]> => {
+    try {
+        const isForge = await detectForgeEnvironment();
+        if (!isForge) {
+          return getMockBonusSessions();
+        }
+        return getBonusSessions();
+    } catch(err) {
+        console.error("Error in getBonusSessionsData:", err);
+        throw err;
+    }
 };

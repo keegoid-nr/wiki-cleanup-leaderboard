@@ -40,7 +40,8 @@ export const Rules: React.FC = () => {
                             <p className="mt-3 text-gray-400">The goal is to improve our wiki. While not all valuable contributions can be scored automatically, all efforts to make our SE space more readable and useful are appreciated!</p>
                         </RuleItem>
                         <RuleItem title="5. Prizes">
-                            <p>A <strong>$100 prize</strong> is awarded to the top scorer of each weekly period. A <strong>$250 grand prize</strong> is awarded to the overall top scorer at the end of the competition.</p>
+                            <p>Three <strong>$100 prizes<sup>*</sup></strong> are awarded to the top three scorers of each weekly period. Week 1 winners will be announced on December 1st.</p>
+                            <p className="mt-2">A <strong>$250 grand prize<sup>*</sup></strong> is awarded to one overall winner, randomly drawn from the top 10 editors of Week 1 and Week 2. The Week 2 and grand prize winners will be announced on December 5th.</p>
                         </RuleItem>
                     </ul>
                 </div>

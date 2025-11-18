@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, isLoading, prize, con
                   {formatDateRange(overallContest.start, overallContest.end)}
                 </p>
               )}
-              {prize && <p className="text-sm text-nr-green-accent font-semibold">{prize}</p>}
+              {prize && <p className="text-sm text-nr-green-accent font-semibold">{prize}<sup>*</sup></p>}
             </div>
         </div>
       </div>

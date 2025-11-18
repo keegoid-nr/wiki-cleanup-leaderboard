@@ -1,9 +1,15 @@
 modules:
-  macro:
-    - key: wiki-cleanup-leaderboard
+  confluence:globalPage:
+    - key: wiki-cleanup-leaderboard-global-page
       resource: main
-      title: wiki-cleanup-leaderboard
-      description: An application to track and display a leaderboard for a Confluence wiki cleanup competition. It shows pages updated today, the editors, and calculates scores based on competition rules.
+      resolver:
+        function: backend-resolver
+        method: fetch-csv
+      route: wiki-cleanup-leaderboard
+      title: Wiki Cleanup Leaderboard
+  function:
+    - key: backend-resolver
+      handler: index.handler
 resources:
   - key: main
     path: static/wiki-cleanup-leaderboard/build
@@ -15,6 +21,11 @@ app:
   id: ari:cloud:ecosystem::app/427f0094-0946-47d5-b6d2-f6d1c831866b
 permissions:
   scopes:
-    - 'read:confluence-content.all'
-    - 'read:confluence-user'
-    - 'search:confluence'
+    - read:confluence-content.all
+    - read:confluence-user
+    - search:confluence
+  external:
+    fetch:
+      backend:
+        - address: sheets.googleapis.com
+        - address: oauth2.googleapis.com

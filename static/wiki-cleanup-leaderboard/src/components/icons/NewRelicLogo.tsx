@@ -10,7 +10,7 @@ export const NewRelicLogo: React.FC<React.SVGProps<SVGSVGElement>> = (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g clip-path="url(#clip0_5075_22003)">
+    <g clipPath="url(#clip0_5075_22003)">
       <path
         d="M22.3821 11.0773V20.9227L13.8572 25.8464V32L27.7144 24.0005V7.9995L22.3821 11.0773Z"
         fill="#00AC69"

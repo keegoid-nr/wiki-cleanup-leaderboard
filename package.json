@@ -11,6 +11,8 @@
     "eslint-plugin-react-hooks": "^4.6.0"
   },
   "dependencies": {
+    "@forge/resolver": "^1.7.1",
+    "googleapis": "^140.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

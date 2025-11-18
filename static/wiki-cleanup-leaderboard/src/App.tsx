@@ -3,9 +3,11 @@ import { Header } from './components/Header';
 import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { UpdatedPagesList } from './components/UpdatedPagesList';
-import { getCompetitionUpdates, getConfig } from './services/confluenceService';
-import type { User, PageUpdate, Contest } from './types';
+import { getCompetitionUpdates, getConfig, getBonusSessionsData, isProductionEnvironment } from './services/confluenceService';
+import type { User, PageUpdate, Contest, BonusSession } from './types';
 import { ContestTabs } from './components/ContestTabs';
+import { Footer } from './components/Footer';
+import { DebugInfo } from './components/DebugInfo';
 
 const App: React.FC = () => {
   const [allPageUpdates, setAllPageUpdates] = useState<PageUpdate[]>([]);
@@ -13,6 +15,8 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [contests, setContests] = useState<Contest[] | null>(null);
   const [selectedContest, setSelectedContest] = useState<Contest | null>(null);
+  const [bonusSessions, setBonusSessions] = useState<BonusSession[]>([]);
+  const [isProduction, setIsProduction] = useState(true);
 
   const calculateScores = useCallback((updates: PageUpdate[]): User[] => {
     const userScores: { [username: string]: { name: string; score: number; avatar: string } } = {};
@@ -41,10 +45,17 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const updates = await getCompetitionUpdates();
+      const [updates, sessions, isProdEnv] = await Promise.all([
+        getCompetitionUpdates(),
+        getBonusSessionsData(),
+        isProductionEnvironment()
+      ]);
       setAllPageUpdates(updates);
+      setBonusSessions(sessions);
+      setIsProduction(isProdEnv);
     } catch (err) {
-      setError('Failed to fetch leaderboard data. Please try again.');
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Failed to fetch leaderboard data. Details: ${message}`);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -54,6 +65,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const config = await getConfig();
         setContests(config.contests);
@@ -65,7 +77,8 @@ const App: React.FC = () => {
         
         await fetchLeaderboardData();
       } catch (err) {
-        setError('Failed to load competition configuration. Please try again.');
+        const message = err instanceof Error ? err.message : String(err);
+        setError(`Failed to load competition configuration. Details: ${message}`);
         console.error(err);
         setIsLoading(false); // Stop loading on config error
       }
@@ -85,6 +98,27 @@ const App: React.FC = () => {
   const leaderboardUsers = useMemo(() => {
     return calculateScores(filteredUpdates);
   }, [filteredUpdates, calculateScores]);
+
+  const week1Contest = useMemo(() => contests?.find(c => c.name === 'Week 1'), [contests]);
+  const week2Contest = useMemo(() => contests?.find(c => c.name === 'Week 2'), [contests]);
+
+  const week1Users = useMemo(() => {
+    if (!week1Contest) return [];
+    const updates = allPageUpdates.filter(update => {
+      const updateDate = new Date(update.timestamp);
+      return updateDate >= week1Contest.start && updateDate <= week1Contest.end;
+    });
+    return calculateScores(updates);
+  }, [allPageUpdates, week1Contest, calculateScores]);
+
+  const week2Users = useMemo(() => {
+    if (!week2Contest) return [];
+    const updates = allPageUpdates.filter(update => {
+      const updateDate = new Date(update.timestamp);
+      return updateDate >= week2Contest.start && updateDate <= week2Contest.end;
+    });
+    return calculateScores(updates);
+  }, [allPageUpdates, week2Contest, calculateScores]);
 
   return (
     <div className="min-h-screen bg-nr-dark text-nr-font font-sans p-4 sm:p-6 lg:p-8">
@@ -107,15 +141,32 @@ const App: React.FC = () => {
         )}
 
         {error && (
-          <div className="mt-8 bg-rose-900/50 border border-rose-800 text-rose-200 px-4 py-3 rounded-lg" role="alert">
-            <p className="font-bold">Error</p>
-            <p className="text-sm">{error}</p>
+          <div className="mt-8 bg-rose-900/50 border border-rose-800 text-rose-200 px-4 py-3 rounded-lg flex items-center justify-between" role="alert">
+            <div>
+              <p className="font-bold">Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
+            <button
+              onClick={fetchLeaderboardData}
+              className="ml-4 px-3 py-1 bg-rose-800 text-white font-bold rounded-md hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-rose-900/50 focus:ring-rose-500 transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
+        <DebugInfo isProduction={isProduction} bonusSessions={bonusSessions} />
+
         <main className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <Leaderboard users={leaderboardUsers} updates={filteredUpdates} isLoading={isLoading} />
+            <Leaderboard 
+              users={leaderboardUsers} 
+              updates={filteredUpdates} 
+              isLoading={isLoading} 
+              selectedContest={selectedContest}
+              week1Users={week1Users}
+              week2Users={week2Users}
+            />
             <UpdatedPagesList updates={filteredUpdates} isLoading={isLoading} />
           </div>
 
@@ -123,6 +174,8 @@ const App: React.FC = () => {
             <Rules />
           </div>
         </main>
+        
+        <Footer />
       </div>
     </div>
   );
