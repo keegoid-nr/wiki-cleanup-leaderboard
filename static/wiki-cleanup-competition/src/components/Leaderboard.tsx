@@ -64,7 +64,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoad
   if (isLoading && !selectedContest) {
     return (
         <section className="bg-nr-dark-card rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 text-white">Leaderboard</h2>
+            <h2 className="text-xl font-semibold mb-4 text-white">Competition</h2>
             <LeaderboardSkeleton />
         </section>
     );
@@ -94,7 +94,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoad
 
   return (
     <section className="bg-nr-dark-card rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-semibold mb-4 text-white">Leaderboard</h2>
+      <h2 className="text-xl font-semibold mb-4 text-white">Competition</h2>
       {isLoading ? <LeaderboardSkeleton /> : (
         <div className="space-y-2">
           {users.length > 0 ? (

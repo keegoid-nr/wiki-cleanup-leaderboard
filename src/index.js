@@ -55,7 +55,7 @@ resolver.define('fetch-csv', async () => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:C`, // Fetches columns A, B, and C
+      range: `${SHEET_NAME}!A:D`, // Fetches columns A, B, C, and D
     });
 
     const csvData = convertToCsv(response.data.values);

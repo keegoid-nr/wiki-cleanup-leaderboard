@@ -21,7 +21,7 @@ There are two `package.json` files. You need to install dependencies for both th
 npm install
 
 # Install frontend dependencies
-cd static/wiki-cleanup-leaderboard
+cd static/wiki-cleanup-competition
 npm install
 cd ../..
 ```
@@ -32,7 +32,7 @@ Before deploying, you need to create a production build of the React app.
 
 ```sh
 # From the root directory
-cd static/wiki-cleanup-leaderboard
+cd static/wiki-cleanup-competition
 npm run build
 cd ../..
 ```
@@ -50,7 +50,7 @@ forge deploy
 forge install --site your-site.atlassian.net --product confluence
 ```
 
-After installation, you can add the "wiki-cleanup-leaderboard" macro to any Confluence page.
+After installation, you can add the "wiki-cleanup-competition" macro to any Confluence page.
 
 ### 4. Development with Tunnel
 
@@ -65,11 +65,11 @@ For a much faster development workflow, use the Forge tunnel to connect your loc
 2. **In a second terminal**, start the React development server:
 
     ```sh
-    cd static/wiki-cleanup-leaderboard
+    cd static/wiki-cleanup-competition
     npm start
     ```
 
-Now, any changes you make to the frontend code in `static/wiki-cleanup-leaderboard/src/` will hot-reload directly on the Confluence page where your macro is active.
+Now, any changes you make to the frontend code in `static/wiki-cleanup-competition/src/` will hot-reload directly on the Confluence page where your macro is active.
 
 ## Support
 

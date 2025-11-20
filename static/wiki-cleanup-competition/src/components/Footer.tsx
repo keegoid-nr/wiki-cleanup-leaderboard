@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
       <p>
         &copy; 2025 | Made with <span role="img" aria-label="love" className="text-red-500">❤️</span> by{' '}
         <a
-          href="https://github.com/keegoid-nr/wiki-cleanup-leaderboard"
+          href="https://github.com/keegoid-nr/wiki-cleanup-competition"
           target="_blank"
           rel="noopener noreferrer"
           className="text-gray-400 hover:text-nr-green-accent underline"

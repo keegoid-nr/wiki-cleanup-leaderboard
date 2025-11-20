@@ -41,7 +41,7 @@ const App: React.FC = () => {
       .sort((a, b) => b.score - a.score);
   }, []);
 
-  const fetchLeaderboardData = useCallback(async () => {
+  const fetchCompetitionData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -55,7 +55,7 @@ const App: React.FC = () => {
       setIsProduction(isProdEnv);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setError(`Failed to fetch leaderboard data. Details: ${message}`);
+      setError(`Failed to fetch competition data. Details: ${message}`);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -75,7 +75,7 @@ const App: React.FC = () => {
         const initialContest = currentWeekContest || config.contests.find(c => c.name === 'Overall') || config.contests[0];
         setSelectedContest(initialContest);
         
-        await fetchLeaderboardData();
+        await fetchCompetitionData();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setError(`Failed to load competition configuration. Details: ${message}`);
@@ -85,7 +85,7 @@ const App: React.FC = () => {
     };
 
     loadInitialData();
-  }, [fetchLeaderboardData]);
+  }, [fetchCompetitionData]);
 
   const filteredUpdates = useMemo(() => {
     if (!selectedContest) return [];
@@ -95,7 +95,7 @@ const App: React.FC = () => {
     });
   }, [allPageUpdates, selectedContest]);
 
-  const leaderboardUsers = useMemo(() => {
+  const competitionUsers = useMemo(() => {
     return calculateScores(filteredUpdates);
   }, [filteredUpdates, calculateScores]);
 
@@ -124,7 +124,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-nr-dark text-nr-font font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <Header 
-          onRefresh={fetchLeaderboardData} 
+          onRefresh={fetchCompetitionData} 
           isLoading={isLoading} 
           prize={selectedContest?.prize ?? ''} 
           contests={contests}
@@ -152,7 +152,7 @@ const App: React.FC = () => {
               )}
             </div>
             <button
-              onClick={fetchLeaderboardData}
+              onClick={fetchCompetitionData}
               className="ml-4 px-3 py-1 bg-rose-800 text-white font-bold rounded-md hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-rose-900/50 focus:ring-rose-500 transition-colors"
             >
               Try Again
@@ -165,7 +165,7 @@ const App: React.FC = () => {
         <main className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <Leaderboard 
-              users={leaderboardUsers} 
+              users={competitionUsers} 
               updates={filteredUpdates} 
               isLoading={isLoading} 
               selectedContest={selectedContest}

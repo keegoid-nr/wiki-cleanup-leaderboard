@@ -84,31 +84,61 @@ const getBonusSessions = async (): Promise<BonusSession[]> => {
     try {
         const { invoke } = await import('@forge/bridge');
         const csvData = (await invoke('fetch-csv')) as string;
-        if (!csvData) return [];
+        if (!csvData) {
+            console.error('No CSV data fetched');
+            return [];
+        }
         
+
+
         const lines = csvData.split('\n').slice(1);
         const userSessions: { [key: string]: Date } = {};
 
-        lines.forEach(line => {
-            const [user, ,timestamp] = line.split(',');
-            if (user && timestamp) {
-                const username = user.trim().replace(/^@/, '');
-                const sessionDate = new Date(timestamp.trim());
-                if (!isNaN(sessionDate.getTime())) {
-                    const key = `${username}-${sessionDate.toISOString().split('T')[0]}`;
-                    // Keep the earliest session for the day if multiple exist
-                    if (!userSessions[key] || sessionDate < userSessions[key]) {
-                        userSessions[key] = sessionDate;
+        lines.forEach((line, index) => {
+            if (!line.trim()) return; // Skip empty lines
+
+            // CSV Format: User, Slack Link, UTC Timestamp, Local Timestamp String
+            const parts = line.split(',');
+            if (parts.length >= 4) {
+                const user = parts[0];
+                const utcTimestampStr = parts[2];
+                // Rejoin the rest in case the date string contains commas
+                const localTimestampStr = parts.slice(3).join(','); 
+                
+                if (user && utcTimestampStr && localTimestampStr) {
+                    const username = user.trim().replace(/^@/, '');
+                    const timestamp = parseInt(utcTimestampStr.trim(), 10);
+                    const sessionDate = new Date(timestamp * 1000); // Convert seconds to ms
+                    
+                    // Extract local date part (e.g. "November 14th, 2025")
+                    const localDatePart = localTimestampStr.split(' at ')[0].trim();
+
+                    if (!isNaN(sessionDate.getTime()) && localDatePart) {
+                        const key = `${username}-${localDatePart}`;
+                        
+                        // Keep the earliest session for that LOCAL day
+                        if (!userSessions[key] || sessionDate < userSessions[key]) {
+                            userSessions[key] = sessionDate;
+                        }
+                    } else {
+                        console.warn(`Invalid date or local timestamp at line ${index + 2}:`, { utcTimestampStr, localTimestampStr, sessionDate });
                     }
+                } else {
+                    console.warn(`Missing fields at line ${index + 2}:`, parts);
                 }
+            } else {
+                console.warn(`Insufficient parts at line ${index + 2}:`, parts);
             }
         });
         
-        return Object.entries(userSessions).map(([key, startTime]) => ({
+        const results = Object.entries(userSessions).map(([key, startTime]) => ({
             user: key.split('-')[0],
             startTime,
             endTime: new Date(startTime.getTime() + 60 * 60 * 1000),
         }));
+
+        console.log(`Parsed ${results.length} unique sessions from ${lines.length} lines.`);
+        return results;
     } catch (error) {
         console.error('Bonus sessions error:', error);
         return [];
@@ -123,7 +153,7 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
     // 1. Search for Pages
     const start = contests[0].start.toISOString().split('T')[0];
     const end = contests[contests.length-1].end.toISOString().split('T')[0];
-    const cql = `space = "SE2" AND type = "page" AND lastModified >= "${start}" AND lastModified < "${end}"`;
+    const cql = `space = "SE" AND type = "page" AND lastModified >= "${start}" AND lastModified < "${end}"`;
     
     console.info(`[LIVE] Fetching pages with CQL: ${cql}`);
     
@@ -174,7 +204,7 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
                     id: `${page.id}-${v.number}`,
                     pageId: page.id,
                     pageTitle: page.title,
-                    pageUrl: `${siteUrl}/wiki/spaces/${page.spaceId || 'SE2'}/pages/${page.id}`,
+                    pageUrl: `${siteUrl}/wiki/spaces/${page.spaceId || 'SE'}/pages/${page.id}`,
                     user,
                     timestamp: v.createdAt,
                     editCharacterCount: points

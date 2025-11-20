@@ -1,6 +1,6 @@
 {
-  "name": "wiki-cleanup-leaderboard",
-  "version": "0.2.4",
+  "name": "wiki-cleanup-competition",
+  "version": "0.3.0",
   "private": true,
   "homepage": ".",
   "dependencies": {
