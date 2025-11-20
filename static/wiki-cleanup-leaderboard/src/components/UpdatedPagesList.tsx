@@ -49,7 +49,7 @@ export const UpdatedPagesList: React.FC<UpdatedPagesListProps> = ({ updates, isL
                             <span className="mx-1.5">&bull;</span>
                             <span>{formatTimestamp(update.timestamp)}</span>
                             <span className="mx-1.5">&bull;</span>
-                            <span>{update.editCharacterCount} char change</span>
+                            <span>{update.editCharacterCount} point</span>
                             {update.multiplier > 1 && (
                                 <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
                                     update.bonusType === 'Critical Content Blitz' ? 'bg-rose-500/30 text-rose-300' : 'bg-teal-500/30 text-teal-300'

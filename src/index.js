@@ -12,7 +12,7 @@ const convertToCsv = (data) => {
   if (!data || data.length === 0) {
     return '';
   }
-  return data.map(row => 
+  return data.map(row =>
     row.map(cell => {
       const cellStr = String(cell || '');
       // Escape quotes and handle commas/newlines
@@ -30,16 +30,16 @@ const convertToCsv = (data) => {
  */
 resolver.define('fetch-csv', async () => {
   try {
-    const { 
-      GOOGLE_SERVICE_ACCOUNT_KEY, 
-      SPREADSHEET_ID, 
-      SHEET_NAME 
+    const {
+      GOOGLE_SERVICE_ACCOUNT_KEY,
+      SPREADSHEET_ID,
+      SHEET_NAME
     } = process.env;
 
     if (!GOOGLE_SERVICE_ACCOUNT_KEY || !SPREADSHEET_ID || !SHEET_NAME) {
       throw new Error('Google Sheets API environment variables are not configured in Forge.');
     }
-    
+
     const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
 
     const auth = new google.auth.JWT(
@@ -52,7 +52,7 @@ resolver.define('fetch-csv', async () => {
     const sheets = google.sheets({ version: 'v4', auth });
 
     console.log(`[BACKEND] Fetching data from Spreadsheet ID: ${SPREADSHEET_ID}, Sheet: ${SHEET_NAME}`);
-    
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_NAME}!A:C`, // Fetches columns A, B, and C

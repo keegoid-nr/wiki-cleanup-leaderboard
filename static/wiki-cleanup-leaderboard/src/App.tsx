@@ -145,6 +145,11 @@ const App: React.FC = () => {
             <div>
               <p className="font-bold">Error</p>
               <p className="text-sm">{error}</p>
+              {error.includes("App ID") && (
+                  <div className="mt-2 text-xs bg-rose-950/50 p-2 rounded border border-rose-800/50">
+                      <strong>Suggestion:</strong> Check your <code>manifest.yml</code> and ensure the <code>app.id</code> matches your current Forge app. You may need to run <code>forge register</code> or update the ID manually if you recreated the app.
+                  </div>
+              )}
             </div>
             <button
               onClick={fetchLeaderboardData}
