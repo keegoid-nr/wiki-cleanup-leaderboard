@@ -23,7 +23,51 @@ const applyBonuses = ( updates: Omit<PageUpdate, 'multiplier' | 'bonusType'>[], 
             bonusType = 'Critical Content Blitz';
         }
 
-        const userSession = bonusSessions.find( session => session.user === update.user.username && updateTimestamp >= session.startTime && updateTimestamp <= session.endTime );
+        const userSession = bonusSessions.find( session => {
+            // Match logic:
+            // 1. Email prefix match (e.g. kmullaney matches kmullaney@newrelic.com)
+            // 2. Exact username/account ID match (fallback)
+            // 3. Name fuzzy match (fallback)
+            
+            const sessionUser = session.user.toLowerCase();
+            const authorEmail = (update.user.email || '').toLowerCase();
+            const authorUsername = update.user.username.toLowerCase();
+            const authorName = update.user.name.toLowerCase();
+
+            // 1. Email prefix match
+            const emailMatch = authorEmail.startsWith(sessionUser) || authorEmail.startsWith(sessionUser + '@');
+            
+            // 2. Exact username/account ID match
+            const usernameMatch = authorUsername === sessionUser;
+            
+            // 3. Name fuzzy match
+            // Check if full name contains the handle (e.g. "Keegan Mullaney" contains "mullaney")
+            const nameContainsMatch = authorName.includes(sessionUser);
+            
+            // Check first initial + last name (e.g. "Keegan Mullaney" -> "kmullaney")
+            const nameParts = authorName.split(' ');
+            let firstInitialLastNameMatch = false;
+            if (nameParts.length >= 2) {
+                const firstInitial = nameParts[0][0];
+                const lastName = nameParts[nameParts.length - 1];
+                const constructedHandle = `${firstInitial}${lastName}`;
+                firstInitialLastNameMatch = constructedHandle === sessionUser;
+            }
+
+            // 4. Full name match (remove spaces)
+            // e.g. "Joi Converse" -> "joiconverse"
+            const fullNameNoSpaces = authorName.replace(/\s+/g, '');
+            const fullNameMatch = fullNameNoSpaces === sessionUser;
+
+            const isMatch = emailMatch || usernameMatch || nameContainsMatch || firstInitialLastNameMatch || fullNameMatch;
+            
+            if (isMatch && updateTimestamp >= session.startTime && updateTimestamp <= session.endTime) {
+                console.log(`[Bonus] Matched session user "${session.user}" to author "${update.user.name}" (email: ${update.user.email})`);
+                return true;
+            }
+            return false;
+        });
+
         if (userSession) {
             if (multiplier < 2) {
                 multiplier = 2;
@@ -52,7 +96,10 @@ const getBonusSessions = async (): Promise<BonusSession[]> => {
                 const sessionDate = new Date(timestamp.trim());
                 if (!isNaN(sessionDate.getTime())) {
                     const key = `${username}-${sessionDate.toISOString().split('T')[0]}`;
-                    if (!userSessions[key]) userSessions[key] = sessionDate;
+                    // Keep the earliest session for the day if multiple exist
+                    if (!userSessions[key] || sessionDate < userSessions[key]) {
+                        userSessions[key] = sessionDate;
+                    }
                 }
             }
         });
@@ -116,10 +163,10 @@ const getLiveCompetitionUpdates = async (config: ContestConfig): Promise<PageUpd
                             const currentText = cleanText(currentVersion.body.storage.value);
                             const prevText = cleanText(prevVersion.body.storage.value);
                             points = Math.abs(currentText.length - prevText.length);
-                            console.log(`[Points] p${page.id} v${v.number} a${v.authorId} c${v.createdAt}: ${currentText.length} - ${prevText.length} = ${points}`);
+                            console.log(`[Points] ${user.name} created p${page.id}-v${v.number} at ${v.createdAt}: ${currentText.length} - ${prevText.length} = ${points}`);
                         }
                     } catch (err) {
-                        console.error(`[Points] Failed to calc diff for p${page.id} v${v.number} a${v.authorId} c${v.createdAt}`, err);
+                        console.error(`[Points] Failed to calc diff: ${user.name} created p${page.id}-v${v.number} at ${v.createdAt}`, err);
                     }
                 }
 

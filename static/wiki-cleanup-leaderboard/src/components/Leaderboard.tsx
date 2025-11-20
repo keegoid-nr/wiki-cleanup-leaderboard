@@ -137,9 +137,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ users, updates, isLoad
                                     </span>
                                 )}
                             </div>
-                            <span className="font-mono text-nr-green-accent ml-4 shrink-0">
-                                +{Math.round(update.editCharacterCount * update.multiplier)}
-                            </span>
+                                <span className="font-mono text-nr-green-accent ml-4 shrink-0 text-right flex items-center justify-end gap-2">
+                                    {update.multiplier > 1 && (
+                                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                                            ({update.editCharacterCount} x{update.multiplier})
+                                        </span>
+                                    )}
+                                    <span>+{Math.round(update.editCharacterCount * update.multiplier)}</span>
+                                </span>
                           </li>
                         ))}
                     </ul>

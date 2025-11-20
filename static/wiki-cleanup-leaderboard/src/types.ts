@@ -9,6 +9,7 @@ export interface UserInfo {
     name: string;
     username: string;
     avatar: string;
+    email?: string;
 }
 
 export type BonusType = 'Focused Flow' | 'Critical Content Blitz';

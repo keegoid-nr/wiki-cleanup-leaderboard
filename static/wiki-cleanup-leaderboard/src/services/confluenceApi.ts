@@ -68,13 +68,15 @@ export const getUserDetailsV1 = async (accountId: string, siteUrl: string): Prom
     const { requestConfluence } = await import('@forge/bridge');
 
     try {
-        const v1Res = await requestConfluence(`/rest/api/user?accountId=${accountId}`);
+        // expand=email is sometimes needed, though often returned by default if visible
+        const v1Res = await requestConfluence(`/rest/api/user?accountId=${accountId}&expand=email`);
         if (v1Res.ok) {
              const v1Data = await v1Res.json();
              return {
                 name: v1Data.displayName || 'Unknown User',
                 username: v1Data.accountId || accountId,
-                avatar: v1Data.profilePicture?.path ? `${siteUrl}${v1Data.profilePicture.path}` : ''
+                avatar: v1Data.profilePicture?.path ? `${siteUrl}${v1Data.profilePicture.path}` : '',
+                email: v1Data.email // May be undefined if hidden
             };
         } else {
             console.warn(`[User API] V1 fetch failed for ${accountId}: ${v1Res.status}`);
@@ -84,4 +86,54 @@ export const getUserDetailsV1 = async (accountId: string, siteUrl: string): Prom
     }
     
     return { name: 'Unknown User', username: accountId, avatar: '' };
+};
+
+/**
+ * Searches for a user by query string (e.g. email or name) and returns their Account ID.
+ * Returns null if not found.
+ */
+export const searchUser = async (query: string): Promise<string | null> => {
+    const { requestConfluence } = await import('@forge/bridge');
+    try {
+        // Use generic search API which is often more permissive/standard
+        // type="user" ensures we look for user objects
+        // 'text' is a general field that matches name, username, email etc.
+        const cql = `type="user" AND text~"${query}"`;
+        const encodedCql = encodeURIComponent(cql);
+        const res = await requestConfluence(`/rest/api/search?cql=${encodedCql}&limit=1`);
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const user = data.results[0];
+                console.log(`[User Search] Query "${query}" returned:`, JSON.stringify(user));
+                
+                // Basic validation: check if query appears in title or username (if present)
+                // This helps avoid false positives where 'text' matches something obscure
+                const title = user.title || '';
+                const username = user.username || '';
+                const email = user.email || ''; // email might not be present
+                
+                // Normalize for comparison
+                const q = query.toLowerCase();
+                const match = title.toLowerCase().includes(q) || 
+                              username.toLowerCase().includes(q) || 
+                              email.toLowerCase().includes(q);
+
+                if (!match) {
+                    console.warn(`[User Search] Result for "${query}" does not appear to match title/username/email. Discarding. Result: ${title} (${username})`);
+                    return null;
+                }
+
+                return user.accountId || user.user?.accountId;
+            } else {
+                console.log(`[User Search] No results for "${query}"`);
+            }
+        } else {
+             console.warn(`[User Search] Search failed with status ${res.status}`);
+        }
+    } catch (e) {
+        console.warn(`[User Search] Failed to search for user "${query}":`, e);
+    }
+    return null;
 };
