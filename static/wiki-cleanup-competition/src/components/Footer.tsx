@@ -25,7 +25,16 @@ export const Footer: React.FC = () => {
           rel="noopener noreferrer"
           className="text-gray-400 hover:text-nr-green-accent underline"
         >
-          Google's AI Studio
+          Google AI Studio
+        </a>
+        {' '}and{' '}
+        <a
+          href="https://antigravity.google"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-400 hover:text-nr-green-accent underline"
+        >
+          Google Antigravity
         </a>.
       </p>
       {appVersion && (

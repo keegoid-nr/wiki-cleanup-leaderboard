@@ -59,63 +59,30 @@ export const isProductionEnvironment = (): Promise<boolean> => {
     return isProductionPromise;
 };
 
+const STATIC_CONTESTS: Contest[] = [
+    { name: 'Week 1', start: new Date('2025-11-19T16:00:00.000Z'), end: new Date('2025-11-26T15:59:59.999Z'), prize: 'Three $100 Prizes for Top Editors!' },
+    { name: 'Week 2', start: new Date('2025-11-26T16:00:00.000Z'), end: new Date('2025-12-05T01:00:00.000Z'), prize: 'Three $100 Prizes for Top Editors!' },
+    { name: 'Overall', start: new Date('2025-11-19T16:00:00.000Z'), end: new Date('2025-12-05T01:00:00.000Z'), prize: '$250 Grand Prize Drawing' },
+];
+
+const STATIC_CRITICAL_CONTENT_DATE = new Date('2025-12-02T00:00:00Z');
+
 const getDynamicContestConfig = (): ContestConfig => {
-    const getStartOfWeekUTC = (date: Date): Date => {
-        const d = new Date(date.getTime());
-        const day = d.getUTCDay();
-        const diff = d.getUTCDate() - day;
-        const startOfWeek = new Date(d.setUTCDate(diff));
-        startOfWeek.setUTCHours(0, 0, 0, 0);
-        return startOfWeek;
-    };
-
-    const now = new Date();
-    const thisWeekStart = getStartOfWeekUTC(now);
-    const thisWeekEnd = new Date(thisWeekStart);
-    thisWeekEnd.setUTCDate(thisWeekStart.getUTCDate() + 6);
-    thisWeekEnd.setUTCHours(23, 59, 59, 999);
-
-    const lastWeekStart = new Date(thisWeekStart);
-    lastWeekStart.setUTCDate(thisWeekStart.getUTCDate() - 7);
-    const lastWeekEnd = new Date(lastWeekStart);
-    lastWeekEnd.setUTCDate(lastWeekStart.getUTCDate() + 6);
-    lastWeekEnd.setUTCHours(23, 59, 59, 999);
-
-    const overallEndDate = new Date(lastWeekStart);
-    overallEndDate.setUTCDate(lastWeekStart.getUTCDate() + 16);
-    overallEndDate.setUTCHours(23, 59, 59, 999);
-
-    const criticalContentBlitzDateObj = new Date(lastWeekStart.getTime() + (24 * 60 * 60 * 1000));
-
-    const contests: Contest[] = [
-        { name: 'Week 1', start: lastWeekStart, end: lastWeekEnd, prize: 'Three $100 Prizes for Top Editors!' },
-        { name: 'Week 2', start: thisWeekStart, end: thisWeekEnd, prize: 'Three $100 Prizes for Top Editors!' },
-        { name: 'Overall', start: lastWeekStart, end: overallEndDate, prize: '$250 Grand Prize Drawing' },
-    ];
-
     return {
-        contests,
+        contests: STATIC_CONTESTS,
         criticalContent: {
             pageIds: new Set(['page-1', 'page-4', 'page-8']),
-            date: criticalContentBlitzDateObj,
+            date: STATIC_CRITICAL_CONTENT_DATE,
         },
     };
 };
 
 const getStaticContestConfig = (): ContestConfig => {
-    const contests: Contest[] = [
-        { name: 'Week 1', start: new Date('2024-11-19T16:00:00.000Z'), end: new Date('2024-11-26T15:59:59.999Z'), prize: 'Three $100 Prizes for Top Editors!' },
-        { name: 'Week 2', start: new Date('2024-11-26T16:00:00.000Z'), end: new Date('2024-12-05T01:00:00.000Z'), prize: 'Three $100 Prizes for Top Editors!' },
-        { name: 'Overall', start: new Date('2024-11-19T16:00:00.000Z'), end: new Date('2024-12-05T01:00:00.000Z'), prize: '$250 Grand Prize Drawing' },
-    ];
-
-    const criticalContentBlitzDateObj = new Date('2024-12-02T00:00:00Z');
-
     return {
-        contests,
+        contests: STATIC_CONTESTS,
         criticalContent: {
             pageIds: new Set(CRITICAL_CONTENT_PAGE_IDS),
-            date: criticalContentBlitzDateObj,
+            date: STATIC_CRITICAL_CONTENT_DATE,
         },
     };
 };

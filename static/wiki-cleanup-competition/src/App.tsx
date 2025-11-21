@@ -92,7 +92,7 @@ const App: React.FC = () => {
     return allPageUpdates.filter(update => {
       const updateDate = new Date(update.timestamp);
       return updateDate >= selectedContest.start && updateDate <= selectedContest.end;
-    });
+    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [allPageUpdates, selectedContest]);
 
   const competitionUsers = useMemo(() => {
